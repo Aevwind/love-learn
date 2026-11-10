@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>学霸锁 (StudyLock) - 高保真交互原型与UI设计规范</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          keyframes: {
+            shake: {
+              '0%, 100%': { transform: 'translateX(0)' },
+              '20%, 60%': { transform: 'translateX(-8px)' },
+              '40%, 80%': { transform: 'translateX(8px)' },
+            },
+            slideDown: {
+              '0%': { opacity: '0', transform: 'translateY(-16px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            pulseWave: {
+              '0%, 100%': { transform: 'scaleY(0.35)' },
+              '50%': { transform: 'scaleY(1)' },
+            }
+          },
+          animation: {
+            shake: 'shake 0.45s cubic-bezier(.36,.07,.19,.97) both',
+            slideDown: 'slideDown 0.3s ease-out forwards',
+            pulseWave: 'pulseWave 0.9s ease-in-out infinite',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar inside Phone Frame */
+    .phone-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .phone-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .phone-scroll::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 9999px;
+    }
+    .phone-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.45);
+    }
+    /* Waveform bar delays */
+    .wave-bar:nth-child(2n) { animation-delay: 0.15s; }
+    .wave-bar:nth-child(3n) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(4n) { animation-delay: 0.45s; }
+    .wave-bar:nth-child(5n) { animation-delay: 0.22s; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans selection:bg-indigo-500 selection:text-white flex flex-col">
+
+  <!-- ================= TOP NAVIGATION & PROTOTYPE BAR ================= -->
+  <header class="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 font-bold text-lg">
+          🔒
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-base sm:text-lg tracking-tight text-white">学霸锁 StudyLock</h1>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-medium">Interactive PRD Prototype v2.4</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">防沉迷应用拦截 · 多题型闯关解锁 · 硬件级防卸载安全交互原型</p>
+        </div>
+      </div>
+
+      <!-- Primary View Switcher -->
+      <div class="flex items-center bg-slate-800/90 p-1 rounded-xl border border-slate-700/70">
+        <button id="tab-dashboard" onclick="switchMainView('dashboard')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow">
+          <span>⚙️</span> 1. 主设置与控制台
+        </button>
+        <button id="tab-intercept" onclick="switchMainView('intercept')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 text-slate-300 hover:text-white">
+          <span>🚨</span> 2. 全屏答题拦截页
+        </button>
+      </div>
+
+      <!-- Quick Action Triggers -->
+      <div class="flex items-center gap-2">
+        <button onclick="openPinLockModal('launch')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5">
+          <span>🔐</span> 测试启动密码锁
+        </button>
+        <button onclick="trigger60sWarningToast()" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 transition flex items-center gap-1.5">
+          <span>🔔</span> 预览60秒预警
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN WORKSPACE (3-COLUMN LAYOUT ON DESKTOP) ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+    <!-- LEFT PANEL: INTERACTIVE SCENARIO CONTROLLER & STATE INSPECTOR -->
+    <aside class="lg:col-span-4 space-y-4 order-2 lg:order-1">
+      <!-- Quick Scenario Simulator Card -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            交互状态快速演练台
+          </h2>
+          <span class="text-[11px] text-slate-400 font-mono">一键直达核心交互</span>
+        </div>
+
+        <div class="space-y-2.5 text-xs">
+          <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
+            <div class="font-semibold text-slate-200 mb-2">🎯 答题拦截页 - 题型直接切换</div>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button onclick="jumpToQuestionType(0)" class="px-2.5 py-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 font-medium transition text-center">
+                A. 词汇单选
+              </button>
+              <button onclick="jumpToQuestionType(1)" class="px-2.5 py-2 rounded-lg bg-violet-600/20 hover:bg-violet-600/40 text-violet-300 border border-violet-500/30 font-medium transition text-center">
+                B. 语法填空
+              </button>
+              <button onclick="jumpToQuestionType(2)" class="px-2.5 py-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/30 font-medium transition text-center">
+                C. 英语听力🔊
+              </button>
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
+            <div class="font-semibold text-slate-200 mb-2">⚡ 极端边界与惩罚机制测试</div>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button onclick="simulateWrongPenalty()" class="px-2.5 py-2 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-medium transition text-left flex items-center gap-1.5">
+                <span>❌</span> 模拟答错5秒惩罚
+              </button>
+              <button onclick="simulateUnlockSuccess()" class="px-2.5 py-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-medium transition text-left flex items-center gap-1.5">
+                <span>🎉</span> 模拟连对通关解锁
+              </button>
+              <button onclick="openImportModal()" class="px-2.5 py-2 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 font-medium transition text-left flex items-center gap-1.5">
+                <span>📥</span> 打开题库JSON导入
+              </button>
+              <button onclick="openEmergencySkipModal()" class="px-2.5 py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-medium transition text-left flex items-center gap-1.5">
+                <span>🏳️</span> 10秒冷静紧急跳过
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UX Design Highlights & Spec Notes -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span>📐</span> UI 布局与防沉迷交互设计要点
+        </h3>
+        <div id="ux-spec-box" class="space-y-2.5 text-xs text-slate-300 leading-relaxed">
+          <div class="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30">
+            <div class="font-semibold text-indigo-300 mb-1">1. 防盲猜强制冷却 (Anti-Guessing Lock)</div>
+            <p class="text-slate-400">客观题一旦选错，立即触发红框震动动画并滑出详细解析，同时底部按钮变为 <span class="text-rose-300 font-mono">请认真阅读解析 (5s)...</span> 禁用态，杜绝用户无脑狂点蒙混过关。</p>
+          </div>
+          <div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
+            <div class="font-semibold text-emerald-300 mb-1">2. 零体积 TTS + 本地音频双引擎听力</div>
+            <p class="text-slate-400">听力题支持直接解析 <span class="font-mono text-emerald-300">tts:word</span> 协议调用系统语音合成（点击原型中的播放按钮可直接听取真人发音！），支持 1.0x / 0.75x 慢速切换。</p>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30">
+            <div class="font-semibold text-amber-300 mb-1">3. 双层防卸载与启动密码锁</div>
+            <p class="text-slate-400">暂停守护、修改受控列表或进入 App 均需验证 6 位 PIN 码（测试密码：<span class="font-mono text-amber-300 font-bold">123456</span>），连续输错 5 次触发防暴破锁定，且刻意禁用本人指纹一键绕过。</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER/RIGHT PANEL: MOBILE DEVICE SIMULATOR -->
+    <section class="lg:col-span-8 flex flex-col items-center order-1 lg:order-2">
+
+      <!-- Phone Simulator Outer Bezel -->
+      <div class="relative w-full max-w-[420px] h-[820px] bg-slate-900 rounded-[46px] p-3 shadow-[0_0_60px_-15px_rgba(99,102,241,0.35)] border-[6px] border-slate-800 flex flex-col overflow-hidden select-none">
+
+        <!-- Phone Dynamic Island & Status Bar -->
+        <div class="relative z-30 pt-1 pb-2 px-6 flex items-center justify-between text-[11px] font-semibold text-slate-300 bg-slate-950/90 backdrop-blur-md rounded-t-[34px]">
+          <span id="phone-clock">21:45</span>
+          <!-- Dynamic Island -->
+          <div class="w-24 h-5 bg-black rounded-full flex items-center justify-between px-2.5 border border-slate-800/80">
+            <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+            <span class="text-[9px] font-mono text-indigo-300">GUARD ON</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span>5G</span>
+            <div class="w-5 h-2.5 border border-slate-400 rounded-sm p-0.5 flex items-center">
+              <div class="w-3.5 h-full bg-emerald-400 rounded-xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= 60s FLOATING TOP WARNING BANNER (OVERLAY) ================= -->
+        <div id="floating-60s-toast" class="hidden absolute top-12 left-4 right-4 z-50 bg-slate-900/95 backdrop-blur-xl border border-amber-500/60 rounded-2xl p-3 shadow-2xl animate-slideDown">
+          <div class="flex items-center justify-between gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-lg shrink-0">
+              ⏳
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-amber-300">即将触发学霸锁拦截</span>
+                <span id="toast-countdown-badge" class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-amber-500 text-slate-950 rounded">59s</span>
+              </div>
+              <p class="text-[11px] text-slate-300 truncate mt-0.5">《王者荣耀》已累计使用29分钟，请尽快保存进度喵！</p>
+            </div>
+            <button onclick="switchMainView('intercept'); hide60sWarningToast();" class="px-2.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] shrink-0 transition">
+              立即答题
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= SCREEN 1: MAIN SETTINGS & DASHBOARD ================= -->
+        <div id="view-dashboard" class="flex-1 bg-slate-950 overflow-y-auto phone-scroll flex flex-col justify-between pb-6">
+          <div class="p-4 space-y-4">
+
+            <!-- App Header inside Phone -->
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-extrabold text-white tracking-tight flex items-center gap-2">
+                  学霸锁控制台
+                  <span id="guard-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">守护中 Active</span>
+                </h2>
+                <p class="text-[11px] text-slate-400">自律给你自由 · 今日已累计专注学习 42 道题</p>
+              </div>
+              <button onclick="openPinLockModal('settings')" title="启动密码设置" class="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-300 hover:text-white hover:border-indigo-500/50 transition">
+                🔐
+              </button>
+            </div>
+
+            <!-- 1. Hero Guard Status & Stats Card -->
+            <div class="relative rounded-2xl p-4 bg-gradient-to-br from-indigo-600/90 via-indigo-700/85 to-violet-800/90 border border-indigo-400/30 shadow-lg overflow-hidden">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-10 h-10 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-xl">
+                    🛡️
+                  </div>
+                  <div>
+                    <div class="text-xs font-medium text-indigo-100">全局防沉迷拦截引擎</div>
+                    <div id="next-intercept-timer" class="text-sm font-bold text-white font-mono">距离下次拦截还剩 14:28</div>
+                  </div>
+                </div>
+                <!-- Master Toggle (Requires PIN if turning off) -->
+                <button id="guard-toggle-btn" onclick="handleGuardToggle()" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-xs font-semibold text-white transition flex items-center gap-1.5">
+                  <span id="guard-toggle-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <span id="guard-toggle-text">暂停守护</span>
+                </button>
+              </div>
+
+              <!-- 3-Column Mini Stats -->
+              <div class="grid grid-cols-3 gap-2 pt-3 border-t border-white/15 text-center">
+                <div class="bg-slate-950/30 rounded-xl p-2">
+                  <div class="text-[10px] text-indigo-200">今日拦截次数</div>
+                  <div class="text-base font-extrabold text-white font-mono mt-0.5">6 <span class="text-[10px] font-normal">次</span></div>
+                </div>
+                <div class="bg-slate-950/30 rounded-xl p-2">
+                  <div class="text-[10px] text-indigo-200">累计闯关答题</div>
+                  <div class="text-base font-extrabold text-white font-mono mt-0.5" id="stat-total-answered">42 <span class="text-[10px] font-normal">题</span></div>
+                </div>
+                <div class="bg-slate-950/30 rounded-xl p-2">
+                  <div class="text-[10px] text-indigo-200">今日正确率</div>
+                  <div class="text-base font-extrabold text-emerald-300 font-mono mt-0.5">86%</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. App Monitoring & Timer Rules -->
+            <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-3.5 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>📱</span> 受控应用黑名单与计时策略
+                </h3>
+                <span id="monitored-count-badge" class="text-[11px] text-indigo-400 font-medium">已监控 4 款应用</span>
+              </div>
+
+              <!-- Shared vs Per-App Segmented Control -->
+              <div class="grid grid-cols-2 bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] font-medium">
+                <button id="timer-mode-shared" onclick="setTimerMode('shared')" class="py-1.5 rounded-lg bg-indigo-600 text-white shadow transition">
+                  🔗 累计共享计时 (推荐)
+                </button>
+                <button id="timer-mode-single" onclick="setTimerMode('single')" class="py-1.5 rounded-lg text-slate-400 hover:text-white transition">
+                  ⏱️ 应用独立计时
+                </button>
+              </div>
+              <p id="timer-mode-desc" class="text-[11px] text-slate-400 leading-tight">
+                列表内所有娱乐应用<span class="text-indigo-300 font-medium">共享同一个倒计时</span>（如刷抖音15分钟+玩王者15分钟=立即触发30分钟拦截）。
+              </p>
+
+              <!-- Trigger Duration Pills -->
+              <div>
+                <div class="flex items-center justify-between text-[11px] mb-1.5">
+                  <span class="text-slate-400">单次可用时长阈值</span>
+                  <span id="duration-label" class="text-indigo-300 font-mono font-semibold">每使用 30 分钟触发</span>
+                </div>
+                <div class="grid grid-cols-4 gap-1.5 text-xs font-mono">
+                  <button onclick="setDurationThreshold(15, this)" class="dur-btn py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:border-slate-700">15m</button>
+                  <button onclick="setDurationThreshold(30, this)" class="dur-btn py-1.5 rounded-lg bg-indigo-600/25 border border-indigo-500 text-indigo-300 font-bold">30m</button>
+                  <button onclick="setDurationThreshold(45, this)" class="dur-btn py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:border-slate-700">45m</button>
+                  <button onclick="setDurationThreshold(60, this)" class="dur-btn py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:border-slate-700">60m</button>
+                </div>
+              </div>
+
+              <!-- Monitored App List -->
+              <div id="app-blacklist-container" class="space-y-1.5 pt-1">
+                <!-- Populated dynamically by JS -->
+              </div>
+
+              <!-- 60s Warning Preview Trigger inside Card -->
+              <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                <div class="text-[11px] text-slate-300">
+                  <span class="font-medium">防打断提前 60 秒悬浮提醒</span>
+                  <p class="text-[10px] text-slate-500">避免团战或打字时突然暴毙</p>
+                </div>
+                <button onclick="trigger60sWarningToast()" class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[11px] font-medium transition">
+                  🔔 预览悬浮窗
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. Question Bank & Quiz Rules -->
+            <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-3.5 space-y-3">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>📚</span> 题库管理与闯关规则
+                </h3>
+                <button onclick="openImportModal()" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold transition flex items-center gap-1 shadow">
+                  <span>＋</span> 导入题库
+                </button>
+              </div>
+
+              <!-- Unlock Streak & Penalty Rules -->
+              <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-slate-300 font-medium">解锁通关条件</span>
+                  <select id="streak-rule-select" onchange="updateStreakRule()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-indigo-300 font-semibold focus:outline-none">
+                    <option value="3" selected>连续答对 3 题解锁</option>
+                    <option value="5">连续答对 5 题解锁</option>
+                    <option value="2">累计答对 2 题解锁</option>
+                  </select>
+                </div>
+                <div class="flex items-center justify-between text-xs pt-1.5 border-t border-slate-800/60">
+                  <div>
+                    <span class="text-slate-300 font-medium">答错惩罚追加 (+1题)</span>
+                    <p class="text-[10px] text-slate-500">答错除锁定5秒看解析外，总需答对题数+1</p>
+                  </div>
+                  <input id="penalty-toggle" type="checkbox" checked class="w-4 h-4 accent-indigo-500 rounded cursor-pointer" />
+                </div>
+              </div>
+
+              <!-- Question Bank Cards -->
+              <div id="question-banks-list" class="space-y-2">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <!-- 4. System Hardening & Anti-Bypass Permissions -->
+            <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-3.5 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>🛡️</span> 系统级防卸载与防破解状态
+                </h3>
+                <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono">4/4 已加固</span>
+              </div>
+
+              <div class="space-y-1.5 text-[11px]">
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/80 border border-slate-800/70">
+                  <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">●</span>
+                    <div>
+                      <div class="font-medium text-slate-200">UsageStats 应用使用时长权限</div>
+                      <div class="text-[10px] text-slate-500">精准毫秒级侦测前台黑名单应用</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] text-emerald-400 font-semibold">已授权</span>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/80 border border-slate-800/70">
+                  <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">●</span>
+                    <div>
+                      <div class="font-medium text-slate-200">Accessibility 全局无障碍霸屏</div>
+                      <div class="text-[10px] text-slate-500">最高优先级拦截并屏蔽返回键/Home键</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] text-emerald-400 font-semibold">运行中</span>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/80 border border-slate-800/70">
+                  <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">●</span>
+                    <div>
+                      <div class="font-medium text-slate-200">Device Admin 设备管理器防卸载</div>
+                      <div class="text-[10px] text-slate-500">未验密解除前禁止系统直接卸载本应用</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] text-emerald-400 font-semibold">已激活</span>
+                </div>
+
+                <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/80 border border-slate-800/70">
+                  <div class="flex items-center gap-2">
+                    <span class="text-emerald-400">●</span>
+                    <div>
+                      <div class="font-medium text-slate-200">锁定「系统设置」与防改时间</div>
+                      <div class="text-[10px] text-slate-500">采用 elapsedRealtime 防止篡改系统时钟绕过</div>
+                    </div>
+                  </div>
+                  <span class="text-[10px] text-emerald-400 font-semibold">受保护</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ================= SCREEN 2: FULL-SCREEN QUIZ INTERCEPTION OVERLAY ================= -->
+        <div id="view-intercept" class="hidden flex-1 relative bg-slate-950 overflow-y-auto phone-scroll flex flex-col justify-between">
+          <!-- Blurred Mocked Game Background Banner -->
+          <div class="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-rose-900/40 via-indigo-950/60 to-slate-950 pointer-events-none"></div>
+
+          <!-- Top Lock Status & Streak Progress Header -->
+          <div class="relative z-10 p-4 space-y-3">
+            <!-- Intercepted App Pill -->
+            <div class="flex items-center justify-between bg-rose-950/80 border border-rose-500/40 rounded-2xl px-3 py-2 backdrop-blur-md shadow-lg">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-sm">⚔️</span>
+                <div>
+                  <div class="text-xs font-bold text-rose-200 flex items-center gap-1.5">
+                    <span>🚫 已触发防沉迷拦截：王者荣耀</span>
+                  </div>
+                  <div class="text-[10px] text-rose-300/80 font-mono">今日已连续使用 30分00秒 · 屏蔽返回键与手势</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/30 text-rose-200 font-bold">LOCKED</span>
+            </div>
+
+            <!-- Streak Progress & Question Type Switcher -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-[11px] text-slate-400">当前闯关要求：</span>
+                  <span id="intercept-req-text" class="text-xs font-bold text-white">连续答对 <span id="target-streak-num" class="text-indigo-400 font-mono">3</span> 题解锁</span>
+                </div>
+                <!-- Penalty Badge (Hidden until wrong answer) -->
+                <span id="penalty-badge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold animate-pulse">
+                  ⚡ 答错惩罚：目标 +1
+                </span>
+              </div>
+
+              <!-- Visual Progress Dots -->
+              <div id="streak-dots-container" class="flex items-center gap-2">
+                <!-- Populated dynamically by JS -->
+              </div>
+
+              <!-- Question Type Quick Switcher Tabs (For Prototype Inspection) -->
+              <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-1">
+                <span class="text-[10px] text-slate-400">当前题型预览：</span>
+                <div class="flex items-center gap-1">
+                  <button onclick="jumpToQuestionType(0)" id="qtype-tab-0" class="px-2 py-1 rounded-md text-[10px] font-semibold bg-indigo-600 text-white transition">单选</button>
+                  <button onclick="jumpToQuestionType(1)" id="qtype-tab-1" class="px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-400 hover:text-white transition">填空</button>
+                  <button onclick="jumpToQuestionType(2)" id="qtype-tab-2" class="px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-400 hover:text-white transition">听力🔊</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- MAIN INTERACTIVE QUESTION CARD -->
+            <div id="quiz-card-container" class="bg-slate-900/95 border border-slate-800 rounded-2xl p-4 shadow-xl space-y-4 transition-all">
+              <!-- Question Meta Header -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span id="q-bank-tag" class="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">CET-6 核心词汇</span>
+                  <span id="q-type-badge" class="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-medium">客观题 · 随机乱序</span>
+                </div>
+                <span id="mistake-book-badge" class="hidden text-[10px] px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">
+                  📌 已加入错题本
+                </span>
+              </div>
+
+              <!-- Question Stem Area -->
+              <div id="q-stem-area" class="space-y-2">
+                <!-- Populated by renderCurrentQuestion() -->
+              </div>
+
+              <!-- Interactive Answer Area (Options / Fill Input / Listening) -->
+              <div id="q-interactive-area" class="space-y-2.5">
+                <!-- Populated by renderCurrentQuestion() -->
+              </div>
+
+              <!-- Detailed Explanation & Anti-Guessing Cooldown Box (Hidden by default) -->
+              <div id="q-explanation-box" class="hidden rounded-xl p-3 bg-slate-950 border border-slate-800 space-y-1.5 animate-slideDown">
+                <div class="flex items-center justify-between">
+                  <span id="q-feedback-title" class="text-xs font-bold text-rose-400">❌ 回答错误 · 触发防盲猜冷却</span>
+                  <span class="text-[10px] font-mono text-slate-400">艾宾浩斯权重 +20%</span>
+                </div>
+                <p id="q-explanation-text" class="text-xs text-slate-300 leading-relaxed"></p>
+              </div>
+
+              <!-- Action / Cooldown Button -->
+              <div class="pt-1">
+                <button id="quiz-action-btn" onclick="handleQuizPrimaryAction()" class="w-full py-3 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2">
+                  <span>提交答案</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Emergency & Utility Bar -->
+          <div class="relative z-10 p-4 pt-2 border-t border-slate-900 bg-slate-950/90 flex items-center justify-between gap-2">
+            <button onclick="showToastNotification('📞 已调起系统紧急拨号盘（白名单豁免通道）', 'emerald')" class="flex-1 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-300 flex items-center justify-center gap-1.5 transition">
+              <span>📞</span> 紧急电话通道
+            </button>
+            <button onclick="openEmergencySkipModal()" class="flex-1 py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-medium text-amber-300 flex items-center justify-center gap-1.5 transition">
+              <span>🏳️</span> 紧急跳过 (剩 <span id="skip-quota-count">1</span> 次)
+            </button>
+          </div>
+
+          <!-- ================= CELEBRATION UNLOCK OVERLAY ================= -->
+          <div id="unlock-success-overlay" class="hidden absolute inset-0 z-40 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center animate-slideDown">
+            <div class="w-20 h-20 rounded-3xl bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-4xl mb-4 shadow-2xl shadow-emerald-500/30">
+              🎉
+            </div>
+            <h3 class="text-xl font-extrabold text-white mb-1">恭喜通关！学霸锁已解除</h3>
+            <p class="text-xs text-slate-300 max-w-xs mb-5">
+              你已连续完成 <span class="text-emerald-400 font-bold">3 道</span> 闯关题目，成功解锁下一个周期的娱乐使用权限！
+            </p>
+            <div class="w-full bg-slate-900 border border-slate-800 rounded-2xl p-3.5 mb-6 grid grid-cols-2 gap-2 text-xs">
+              <div class="p-2 rounded-xl bg-slate-950">
+                <div class="text-slate-400 text-[10px]">本次获得时长</div>
+                <div class="text-emerald-400 font-bold font-mono text-sm mt-0.5">+30 分钟</div>
+              </div>
+              <div class="p-2 rounded-xl bg-slate-950">
+                <div class="text-slate-400 text-[10px]">新收录错题</div>
+                <div id="unlock-mistakes-count" class="text-amber-300 font-bold font-mono text-sm mt-0.5">1 题</div>
+              </div>
+            </div>
+            <div class="w-full space-y-2">
+              <button onclick="resetQuizAndReturnToGame()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm transition shadow-lg shadow-emerald-500/25">
+                返回《王者荣耀》继续娱乐
+              </button>
+              <button onclick="resetQuizOnly()" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold transition">
+                再来一组题目巩固一下
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= MODAL 1: SECURITY PIN LOCK SCREEN ================= -->
+        <div id="pin-lock-modal" class="hidden absolute inset-0 z-50 bg-slate-950/98 backdrop-blur-xl flex flex-col justify-between p-6 animate-slideDown">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-mono text-indigo-400 flex items-center gap-1">
+              <span>🛡️</span> SHA-256 Keystore 安全验证
+            </span>
+            <button onclick="closePinLockModal()" class="text-xs text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-900">
+              取消返回
+            </button>
+          </div>
+
+          <div class="text-center space-y-3 my-auto">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-2xl mx-auto">
+              🔒
+            </div>
+            <h3 id="pin-modal-title" class="text-base font-extrabold text-white">请输入 6 位监督启动密码</h3>
+            <p id="pin-modal-subtitle" class="text-xs text-slate-400">
+              防止本人随意修改防沉迷配置 (测试密码: <span class="text-amber-300 font-mono font-bold">123456</span>)
+            </p>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-[10px] text-rose-300">
+              <span>🚫</span> 已禁用本机指纹/面容一键绕过
+            </div>
+
+            <!-- 6 PIN Dots Indicator -->
+            <div id="pin-dots-box" class="flex items-center justify-center gap-3 py-3">
+              <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-slate-600 transition-all"></div>
+              <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-slate-600 transition-all"></div>
+              <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-slate-600 transition-all"></div>
+              <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-slate-600 transition-all"></div>
+              <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-slate-600 transition-all"></div>
+              <div class="pin-dot w-3.5 h-3.5 rounded-full border-2 border-slate-600 transition-all"></div>
+            </div>
+
+            <p id="pin-error-msg" class="text-xs text-rose-400 font-medium h-4"></p>
+
+            <!-- Numeric Keypad -->
+            <div class="grid grid-cols-3 gap-3 max-w-[260px] mx-auto pt-2">
+              <button onclick="pressPinDigit('1')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">1</button>
+              <button onclick="pressPinDigit('2')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">2</button>
+              <button onclick="pressPinDigit('3')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">3</button>
+              <button onclick="pressPinDigit('4')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">4</button>
+              <button onclick="pressPinDigit('5')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">5</button>
+              <button onclick="pressPinDigit('6')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">6</button>
+              <button onclick="pressPinDigit('7')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">7</button>
+              <button onclick="pressPinDigit('8')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">8</button>
+              <button onclick="pressPinDigit('9')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">9</button>
+              <button onclick="fillDefaultPin()" class="h-13 py-3 rounded-2xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-[11px] font-bold text-indigo-300 transition">一键填123456</button>
+              <button onclick="pressPinDigit('0')" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-lg font-bold text-white transition">0</button>
+              <button onclick="backspacePin()" class="h-13 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 active:scale-95 border border-slate-800 text-sm font-bold text-slate-300 transition">⌫</button>
+            </div>
+          </div>
+
+          <div class="text-center text-[10px] text-slate-500">
+            连续输错 5 次将触发防暴力破解锁定 10 分钟
+          </div>
+        </div>
+
+        <!-- ================= MODAL 2: MANUAL QUESTION BANK JSON IMPORT ================= -->
+        <div id="import-bank-modal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl p-4 flex flex-col justify-between overflow-y-auto phone-scroll animate-slideDown">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 class="text-sm font-bold text-white">📥 手动导入自定义题库</h3>
+                <p class="text-[10px] text-slate-400">支持 JSON / CSV / Anki (.apkg) 及多媒体 ZIP 包</p>
+              </div>
+              <button onclick="closeImportModal()" class="w-7 h-7 rounded-lg bg-slate-900 text-slate-400 hover:text-white text-xs">✕</button>
+            </div>
+
+            <!-- Format Badges -->
+            <div class="grid grid-cols-3 gap-2 text-center text-[11px]">
+              <div class="p-2 rounded-xl bg-indigo-500/15 border border-indigo-500/40 text-indigo-300 font-semibold">
+                📄 标准 JSON
+              </div>
+              <div class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400">
+                📊 Excel / CSV
+              </div>
+              <div class="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400">
+                🗂️ Anki (.apkg)
+              </div>
+            </div>
+
+            <!-- Live Editable JSON Schema Box -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="text-slate-300 font-medium">题库 JSON 协议实时校验器：</span>
+                <button onclick="resetSampleJson()" class="text-indigo-400 hover:underline text-[10px]">恢复示例模板</button>
+              </div>
+              <textarea id="json-import-textarea" rows="10" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-[11px] font-mono text-emerald-300 focus:outline-none focus:border-indigo-500"></textarea>
+              <p id="json-validation-msg" class="text-[11px] text-slate-400"></p>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800 flex items-center gap-2">
+            <button onclick="closeImportModal()" class="flex-1 py-2.5 rounded-xl bg-slate-900 text-slate-300 text-xs font-semibold">取消</button>
+            <button onclick="validateAndImportJsonBank()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30">
+              校验并导入题库
+            </button>
+          </div>
+        </div>
+
+        <!-- ================= MODAL 3: EMERGENCY 10S MINDFULNESS SKIP ================= -->
+        <div id="emergency-skip-modal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl p-6 flex flex-col justify-center items-center text-center animate-slideDown">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl mb-3">
+            🏳️
+          </div>
+          <h3 class="text-base font-extrabold text-white mb-1">确认使用今日唯一「紧急跳过」？</h3>
+          <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+            为防止冲动跳过，请先进行 <span class="text-amber-300 font-bold">5 秒深呼吸冷静倒计时</span>。跳过后仅临时豁免 10 分钟，且下次拦截需额外多答 2 题喵！
+          </p>
+          <div class="w-full space-y-2">
+            <button id="confirm-skip-btn" onclick="executeEmergencySkip()" disabled class="w-full py-3 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs transition">
+              请冷静思考 (5s)...
+            </button>
+            <button onclick="closeEmergencySkipModal()" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold">
+              我再坚持答完题！
+            </button>
+          </div>
+        </div>
+
+        <!-- Global Toast Notification inside Phone -->
+        <div id="phone-toast" class="hidden absolute bottom-16 left-5 right-5 z-50 bg-slate-900/95 border border-indigo-500/50 text-white px-3.5 py-2.5 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-2 animate-slideDown">
+          <span id="phone-toast-icon">✨</span>
+          <span id="phone-toast-text" class="flex-1">操作成功</span>
+        </div>
+
+        <!-- Phone Bottom Home Indicator Bar -->
+        <div class="bg-slate-950 pt-1 pb-2 flex justify-center">
+          <div class="w-32 h-1 bg-slate-700 rounded-full"></div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= APPLICATION LOGIC & INTERACTIVE STATE ================= -->
+  <script>
+    // --- 1. CORE STATE ---
+    const state = {
+      currentView: 'dashboard', // 'dashboard' | 'intercept'
+      guardActive: true,
+      timerMode: 'shared', // 'shared' | 'single'
+      durationMinutes: 30,
+      targetStreak: 3,
+      currentStreak: 1,
+      penaltyOnWrong: true,
+      skipQuota: 1,
+      totalAnsweredToday: 42,
+      mistakesAddedThisSession: 0,
+
+      // PIN Lock State
+      pinBuffer: '',
+      pinPurpose: 'launch', // 'launch' | 'pauseGuard' | 'settings'
+      pinFailedCount: 0,
+      correctPin: '123456',
+
+      // Quiz State
+      currentQuestionIndex: 0,
+      selectedOptionIndex: null,
+      hasSubmittedCurrent: false,
+      cooldownRemaining: 0,
+      cooldownTimerId: null,
+      speechRate: 1.0,
+      replayCount: 0,
+
+      // Monitored Apps List
+      apps: [
+        { id: 'honor', name: '王者荣耀', category: '游戏娱乐', icon: '⚔️', usedToday: '29m', monitored: true },
+        { id: 'douyin', name: '抖音短视频', category: '短视频', icon: '🎵', usedToday: '45m', monitored: true },
+        { id: 'bilibili', name: '哔哩哔哩', category: '视频社区', icon: '📺', usedToday: '18m', monitored: true },
+        { id: 'xiaohongshu', name: '小红书', category: '社交种草', icon: '📕', usedToday: '12m', monitored: true },
+        { id: 'wechat', name: '微信 (白名单通讯)', category: '日常通讯', icon: '💬', usedToday: '52m', monitored: false }
+      ],
+
+      // Question Banks List
+      banks: [
+        { id: 'cet6', name: 'CET-6 六级核心高频词', count: 1240, progress: 68, types: ['单选', '听力'], active: true },
+        { id: 'ielts', name: '雅思听力场景词汇库', count: 860, progress: 42, types: ['听力', '填空'], active: true },
+        { id: 'fe', name: '前端 TypeScript / Vue 面试题', count: 320, progress: 85, types: ['单选', '填空'], active: true },
+        { id: 'mistakes', name: '📌 艾宾浩斯智能错题本', count: 19, progress: 30, types: ['优先抽取'], active: true }
+      ],
+
+      // Multi-Type Questions Pool
+      questions: [
+        {
+          id: 'q1',
+          type: 'choice',
+          bankName: 'CET-6 六级核心高频词',
+          typeLabel: '客观单选 · 选项随机乱序',
+          stem: 'ubiquitous',
+          phonetic: '/juːˈbɪkwɪtəs/ adj.',
+          prompt: '请选择该单词最准确的中文释义：',
+          options: [
+            { text: 'A. 无所不在的；普遍存在的', isCorrect: true },
+            { text: 'B. 模棱两可的；含糊不清的', isCorrect: false },
+            { text: 'C. 转瞬即逝的；短暂的', isCorrect: false },
+            { text: 'D. 吹毛求疵的；挑剔的', isCorrect: false }
+          ],
+          explanation: '【解析】ubiquitous 意为“无处不在的、普遍存在的”。例句：Smartphones have become ubiquitous in modern daily life.（智能手机在现代日常生活中已无处不在。）易混词：ambiguous（模棱两可的）、ephemeral（短暂的）。'
+        },
+        {
+          id: 'q2',
+          type: 'fill',
+          bankName: '前端 TypeScript / 英语双语库',
+          typeLabel: '主观填空 · 忽略大小写与同义词匹配',
+          stem: 'The phenomenon of global warming is largely attributed ______ human industrial activities.',
+          phonetic: '提示：固定搭配“归因于…”（支持输入英文介词或中文意思）',
+          acceptedAnswers: ['to', '归因于', '归咎于'],
+          explanation: '【解析】be attributed to... 为高频固定搭配，意为“归因于…、由…引起”。本填空引擎支持忽略首尾空格、大小写及“to | 归因于”多同义词匹配。'
+        },
+        {
+          id: 'q3',
+          type: 'listening',
+          bankName: '雅思听力高频 · 系统TTS语音合成',
+          typeLabel: '英语听力 · Web Speech 真人发音',
+          ttsText: 'Phenomenon. A remarkable event or situation that is observed to exist or happen.',
+          ttsWordOnly: 'phenomenon',
+          stem: '请点击下方语音按钮听取单词与例句发音，选择正确拼写与释义：',
+          options: [
+            { text: 'A. phenomenon — 现象；奇事', isCorrect: true },
+            { text: 'B. philosophy — 哲学；人生观', isCorrect: false },
+            { text: 'C. pneumonia — 肺炎', isCorrect: false },
+            { text: 'D. philanthropist — 慈善家', isCorrect: false }
+          ],
+          explanation: '【解析】录音朗读词为 phenomenon [fəˈnɒmɪnən] n. 现象；杰出的人或事物。其复数形式为不规则变化 phenomena。'
+        }
+      ]
+    };
+
+    // --- 2. INITIALIZATION ---
+    window.onload = function () {
+      renderAppBlacklist();
+      renderQuestionBanks();
+      renderStreakDots();
+      renderCurrentQuestion();
+      resetSampleJson();
+    };
+
+    // --- 3. VIEW NAVIGATION ---
+    function switchMainView(viewName) {
+      state.currentView = viewName;
+      const dashEl = document.getElementById('view-dashboard');
+      const intEl = document.getElementById('view-intercept');
+      const tabDash = document.getElementById('tab-dashboard');
+      const tabInt = document.getElementById('tab-intercept');
+
+      if (viewName === 'dashboard') {
+        dashEl.classList.remove('hidden');
+        intEl.classList.add('hidden');
+        tabDash.className = 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 bg-indigo-600 text-white shadow';
+        tabInt.className = 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 text-slate-300 hover:text-white';
+      } else {
+        dashEl.classList.add('hidden');
+        intEl.classList.remove('hidden');
+        tabInt.className = 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 bg-rose-600 text-white shadow';
+        tabDash.className = 'px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5 text-slate-300 hover:text-white';
+        renderStreakDots();
+        renderCurrentQuestion();
+      }
+    }
+
+    // --- 4. DASHBOARD RENDERING & CONTROLS ---
+    function renderAppBlacklist() {
+      const container = document.getElementById('app-blacklist-container');
+      const monitoredCount = state.apps.filter(a => a.monitored).length;
+      document.getElementById('monitored-count-badge').textContent = `已监控 ${monitoredCount} 款应用`;
+
+      container.innerHTML = state.apps.map((app, idx) => `
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/90 border ${app.monitored ? 'border-slate-800' : 'border-slate-800/40 opacity-60'}">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-base">${app.icon}</span>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold text-slate-200">${app.name}</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-900 text-slate-400 border border-slate-800">${app.category}</span>
+              </div>
+              <div class="text-[10px] text-slate-500 font-mono">今日已用 ${app.usedToday}</div>
+            </div>
+          </div>
+          <button onclick="toggleAppMonitored(${idx})" class="w-10 h-5 rounded-full transition-colors p-0.5 flex items-center ${app.monitored ? 'bg-indigo-600 justify-end' : 'bg-slate-800 justify-start'}">
+            <span class="w-4 h-4 rounded-full bg-white shadow"></span>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function toggleAppMonitored(idx) {
+      state.apps[idx].monitored = !state.apps[idx].monitored;
+      renderAppBlacklist();
+      const app = state.apps[idx];
+      showToastNotification(`${app.monitored ? '✅ 已加入受控名单：' : '⚪ 已移出受控名单：'}${app.name}`, 'indigo');
+    }
+
+    function setTimerMode(mode) {
+      state.timerMode = mode;
+      const btnShared = document.getElementById('timer-mode-shared');
+      const btnSingle = document.getElementById('timer-mode-single');
+      const desc = document.getElementById('timer-mode-desc');
+
+      if (mode === 'shared') {
+        btnShared.className = 'py-1.5 rounded-lg bg-indigo-600 text-white shadow transition';
+        btnSingle.className = 'py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+        desc.innerHTML = '列表内所有娱乐应用<span class="text-indigo-300 font-medium">共享同一个倒计时</span>（如刷抖音15分钟+玩王者15分钟=立即触发30分钟拦截）。';
+      } else {
+        btnSingle.className = 'py-1.5 rounded-lg bg-indigo-600 text-white shadow transition';
+        btnShared.className = 'py-1.5 rounded-lg text-slate-400 hover:text-white transition';
+        desc.innerHTML = '每个受控应用<span class="text-emerald-300 font-medium">单独计算使用时长</span>，适合针对特定重度沉迷游戏进行专项限制。';
+      }
+    }
+
+    function setDurationThreshold(mins, btnEl) {
+      state.durationMinutes = mins;
+      document.getElementById('duration-label').textContent = `每使用 ${mins} 分钟触发`;
+      document.querySelectorAll('.dur-btn').forEach(b => {
+        b.className = 'dur-btn py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:border-slate-700';
+      });
+      btnEl.className = 'dur-btn py-1.5 rounded-lg bg-indigo-600/25 border border-indigo-500 text-indigo-300 font-bold';
+      showToastNotification(`⏱️ 拦截阈值已设为每 ${mins} 分钟触发一次`, 'indigo');
+    }
+
+    function updateStreakRule() {
+      const val = parseInt(document.getElementById('streak-rule-select').value, 10);
+      state.targetStreak = val;
+      state.currentStreak = 1;
+      document.getElementById('target-streak-num').textContent = val;
+      renderStreakDots();
+      showToastNotification(`🎯 通关条件已更新为：答对 ${val} 题`, 'indigo');
+    }
+
+    function renderQuestionBanks() {
+      const container = document.getElementById('question-banks-list');
+      container.innerHTML = state.banks.map((bank, idx) => `
+        <div onclick="toggleBankActive(${idx})" class="p-2.5 rounded-xl bg-slate-950/90 border cursor-pointer transition ${bank.active ? 'border-indigo-500/40' : 'border-slate-800 opacity-55'}">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" ${bank.active ? 'checked' : ''} onclick="event.stopPropagation(); toggleBankActive(${idx});" class="w-3.5 h-3.5 accent-indigo-500 rounded" />
+              <span class="text-xs font-semibold text-slate-200">${bank.name}</span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">${bank.count} 题</span>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-1">
+              ${bank.types.map(t => `<span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-900 text-indigo-300 border border-slate-800">${t}</span>`).join('')}
+            </div>
+            <div class="flex-1 max-w-[110px] h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full" style="width: ${bank.progress}%"></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleBankActive(idx) {
+      state.banks[idx].active = !state.banks[idx].active;
+      renderQuestionBanks();
+    }
+
+    // --- 5. GUARD TOGGLE & PIN SECURITY MODAL ---
+    function handleGuardToggle() {
+      if (state.guardActive) {
+        // Turning off guard requires PIN verification!
+        openPinLockModal('pauseGuard');
+      } else {
+        setGuardStatus(true);
+        showToastNotification('🛡️ 学霸锁全局防沉迷守护已恢复开启！', 'emerald');
+      }
+    }
+
+    function setGuardStatus(active) {
+      state.guardActive = active;
+      const badge = document.getElementById('guard-badge');
+      const dot = document.getElementById('guard-toggle-dot');
+      const txt = document.getElementById('guard-toggle-text');
+      const timerTxt = document.getElementById('next-intercept-timer');
+
+      if (active) {
+        badge.textContent = '守护中 Active';
+        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold';
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+        txt.textContent = '暂停守护';
+        timerTxt.textContent = '距离下次拦截还剩 14:28';
+      } else {
+        badge.textContent = '已暂停 Paused';
+        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+        txt.textContent = '恢复守护';
+        timerTxt.textContent = '守护已暂停 (15分钟后自动恢复)';
+      }
+    }
+
+    function openPinLockModal(purpose) {
+      state.pinPurpose = purpose;
+      state.pinBuffer = '';
+      updatePinDotsUI();
+      document.getElementById('pin-error-msg').textContent = '';
+
+      const titleEl = document.getElementById('pin-modal-title');
+      if (purpose === 'pauseGuard') {
+        titleEl.textContent = '验证监督密码以暂停守护';
+      } else if (purpose === 'settings') {
+        titleEl.textContent = '验证启动密码以修改安全配置';
+      } else {
+        titleEl.textContent = '应用已加密 · 请输入启动密码';
+      }
+
+      document.getElementById('pin-lock-modal').classList.remove('hidden');
+    }
+
+    function closePinLockModal() {
+      document.getElementById('pin-lock-modal').classList.add('hidden');
+    }
+
+    function pressPinDigit(digit) {
+      if (state.pinFailedCount >= 5) return;
+      if (state.pinBuffer.length < 6) {
+        state.pinBuffer += digit;
+        updatePinDotsUI();
+        if (state.pinBuffer.length === 6) {
+          setTimeout(verifyPinSubmission, 120);
+        }
+      }
+    }
+
+    function backspacePin() {
+      state.pinBuffer = state.pinBuffer.slice(0, -1);
+      updatePinDotsUI();
+    }
+
+    function fillDefaultPin() {
+      state.pinBuffer = '123456';
+      updatePinDotsUI();
+      setTimeout(verifyPinSubmission, 150);
+    }
+
+    function updatePinDotsUI() {
+      const dots = document.querySelectorAll('#pin-dots-box .pin-dot');
+      dots.forEach((dot, idx) => {
+        if (idx < state.pinBuffer.length) {
+          dot.className = 'pin-dot w-3.5 h-3.5 rounded-full bg-indigo-400 border-2 border-indigo-400 scale-110 transition-all';
+        } else {
+          dot.className = 'pin-dot w-3.5 h-3.5 rounded-full border-2 border-slate-600 transition-all';
+        }
+      });
+    }
+
+    function verifyPinSubmission() {
+      const dotsBox = document.getElementById('pin-dots-box');
+      const errEl = document.getElementById('pin-error-msg');
+
+      if (state.pinBuffer === state.correctPin) {
+        state.pinFailedCount = 0;
+        closePinLockModal();
+        if (state.pinPurpose === 'pauseGuard') {
+          setGuardStatus(false);
+          showToastNotification('🔓 密码验证通过，守护已临时暂停', 'amber');
+        } else {
+          showToastNotification('🔓 启动密码验证通过！欢迎进入学霸锁', 'emerald');
+        }
+      } else {
+        state.pinFailedCount++;
+        state.pinBuffer = '';
+        updatePinDotsUI();
+        dotsBox.classList.remove('animate-shake');
+        void dotsBox.offsetWidth; // trigger reflow
+        dotsBox.classList.add('animate-shake');
+
+        if (state.pinFailedCount >= 5) {
+          errEl.textContent = '🚨 连续输错 5 次！已触发防暴力破解锁定 10 分钟';
+        } else {
+          errEl.textContent = `密码错误！还剩 ${5 - state.pinFailedCount} 次尝试机会 (测试码: 123456)`;
+        }
+      }
+    }
+
+    // --- 6. 60-SECOND TOP FLOATING WARNING BANNER ---
+    let toastWarningTimer = null;
+    function trigger60sWarningToast() {
+      const banner = document.getElementById('floating-60s-toast');
+      const badge = document.getElementById('toast-countdown-badge');
+      banner.classList.remove('hidden');
+
+      let sec = 59;
+      badge.textContent = `${sec}s`;
+      if (toastWarningTimer) clearInterval(toastWarningTimer);
+      toastWarningTimer = setInterval(() => {
+        sec--;
+        if (sec <= 0) {
+          clearInterval(toastWarningTimer);
+          hide60sWarningToast();
+          switchMainView('intercept');
+        } else {
+          badge.textContent = `${sec}s`;
+        }
+      }, 1000);
+    }
+
+    function hide60sWarningToast() {
+      if (toastWarningTimer) clearInterval(toastWarningTimer);
+      document.getElementById('floating-60s-toast').classList.add('hidden');
+    }
+
+    // --- 7. FULL-SCREEN QUIZ INTERCEPTION ENGINE ---
+    function renderStreakDots() {
+      const container = document.getElementById('streak-dots-container');
+      document.getElementById('target-streak-num').textContent = state.targetStreak;
+      let html = '';
+      for (let i = 0; i < state.targetStreak; i++) {
+        const done = i < state.currentStreak;
+        html += `
+          <div class="flex-1 h-2.5 rounded-full transition-all ${done ? 'bg-gradient-to-r from-emerald-400 to-teal-400 shadow-sm shadow-emerald-500/40' : 'bg-slate-800'}"></div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    function jumpToQuestionType(index) {
+      if (state.cooldownTimerId) {
+        clearInterval(state.cooldownTimerId);
+        state.cooldownTimerId = null;
+      }
+      state.currentQuestionIndex = index;
+      state.selectedOptionIndex = null;
+      state.hasSubmittedCurrent = false;
+      if (state.currentView !== 'intercept') {
+        switchMainView('intercept');
+      } else {
+        renderCurrentQuestion();
+      }
+    }
+
+    function renderCurrentQuestion() {
+      const q = state.questions[state.currentQuestionIndex];
+      state.selectedOptionIndex = null;
+      state.hasSubmittedCurrent = false;
+
+      // Update Question Type Switcher Tabs
+      [0, 1, 2].forEach(idx => {
+        const tab = document.getElementById(`qtype-tab-${idx}`);
+        if (idx === state.currentQuestionIndex) {
+          tab.className = 'px-2 py-1 rounded-md text-[10px] font-semibold bg-indigo-600 text-white transition';
+        } else {
+          tab.className = 'px-2 py-1 rounded-md text-[10px] font-semibold bg-slate-800 text-slate-400 hover:text-white transition';
+        }
+      });
+
+      document.getElementById('q-bank-tag').textContent = q.bankName;
+      document.getElementById('q-type-badge').textContent = q.typeLabel;
+      document.getElementById('mistake-book-badge').classList.add('hidden');
+      document.getElementById('q-explanation-box').classList.add('hidden');
+
+      const stemArea = document.getElementById('q-stem-area');
+      const interArea = document.getElementById('q-interactive-area');
+      const actionBtn = document.getElementById('quiz-action-btn');
+
+      actionBtn.disabled = false;
+      actionBtn.className = 'w-full py-3 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2';
+      actionBtn.innerHTML = '<span>确认提交答案</span>';
+
+      if (q.type === 'choice') {
+        stemArea.innerHTML = `
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800/80 text-center space-y-1">
+            <div class="text-xl font-extrabold text-white tracking-wide font-mono">${q.stem}</div>
+            <div class="text-xs text-indigo-300 font-mono">${q.phonetic}</div>
+          </div>
+          <p class="text-xs text-slate-300 font-medium pt-1">${q.prompt}</p>
+        `;
+        interArea.innerHTML = q.options.map((opt, idx) => `
+          <button onclick="selectChoiceOption(${idx})" id="choice-opt-${idx}" class="w-full text-left p-3 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 text-xs font-medium text-slate-200 transition flex items-center justify-between">
+            <span>${opt.text}</span>
+            <span class="opt-indicator w-4 h-4 rounded-full border border-slate-600 flex items-center justify-center text-[10px]"></span>
+          </button>
+        `).join('');
+      } else if (q.type === 'fill') {
+        stemArea.innerHTML = `
+          <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-2">
+            <p class="text-xs sm:text-sm font-semibold text-white leading-relaxed">${q.stem}</p>
+            <p class="text-[11px] text-indigo-300">${q.phonetic}</p>
+          </div>
+        `;
+        interArea.innerHTML = `
+          <div class="space-y-2">
+            <input id="fill-blank-input" type="text" placeholder="在此输入答案 (例如: to 或 归因于)..." class="w-full px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-700 text-sm text-white font-mono focus:outline-none focus:border-indigo-500" />
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span>支持忽略大小写与多同义词匹配</span>
+              <div class="space-x-1">
+                <button onclick="document.getElementById('fill-blank-input').value='to'" class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">填入正确: to</button>
+                <button onclick="document.getElementById('fill-blank-input').value='with'" class="px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/30">填入错误: with</button>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (q.type === 'listening') {
+        stemArea.innerHTML = `
+          <p class="text-xs text-slate-300 font-medium">${q.stem}</p>
+          <!-- Audio Waveform Player Card -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-950/90 to-slate-950 border border-indigo-500/40 flex items-center justify-between gap-3">
+            <button onclick="playListeningTTS()" class="w-11 h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center text-lg shadow-lg shadow-indigo-600/30 shrink-0 transition active:scale-95">
+              🔊
+            </button>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1 h-6 items-end" id="waveform-bars">
+                <span class="wave-bar w-1 h-3 bg-indigo-400 rounded-full"></span>
+                <span class="wave-bar w-1 h-5 bg-indigo-400 rounded-full"></span>
+                <span class="wave-bar w-1 h-4 bg-indigo-400 rounded-full"></span>
+                <span class="wave-bar w-1 h-6 bg-indigo-400 rounded-full"></span>
+                <span class="wave-bar w-1 h-3 bg-indigo-400 rounded-full"></span>
+                <span class="wave-bar w-1 h-5 bg-indigo-400 rounded-full"></span>
+                <span class="wave-bar w-1 h-2 bg-indigo-400 rounded-full"></span>
+                <span class="wave-bar w-1 h-6 bg-indigo-400 rounded-full"></span>
+                <span class="wave-bar w-1 h-4 bg-indigo-400 rounded-full"></span>
+                <span class="wave-bar w-1 h-3 bg-indigo-400 rounded-full"></span>
+              </div>
+              <div class="text-[10px] text-indigo-300 font-mono mt-1" id="tts-status-label">点击左侧喇叭播放真人发音 (tts:phenomenon)</div>
+            </div>
+            <button onclick="toggleSpeechRate()" id="speech-rate-btn" class="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 text-[11px] font-mono text-amber-300 shrink-0">
+              ${state.speechRate}x
+            </button>
+          </div>
+        `;
+        interArea.innerHTML = q.options.map((opt, idx) => `
+          <button onclick="selectChoiceOption(${idx})" id="choice-opt-${idx}" class="w-full text-left p-3 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 text-xs font-medium text-slate-200 transition flex items-center justify-between">
+            <span>${opt.text}</span>
+            <span class="opt-indicator w-4 h-4 rounded-full border border-slate-600 flex items-center justify-center text-[10px]"></span>
+          </button>
+        `).join('');
+      }
+    }
+
+    function selectChoiceOption(idx) {
+      if (state.hasSubmittedCurrent) return;
+      state.selectedOptionIndex = idx;
+      const q = state.questions[state.currentQuestionIndex];
+      q.options.forEach((_, i) => {
+        const btn = document.getElementById(`choice-opt-${i}`);
+        if (!btn) return;
+        if (i === idx) {
+          btn.className = 'w-full text-left p-3 rounded-xl bg-indigo-600/20 border-2 border-indigo-500 text-xs font-semibold text-white transition flex items-center justify-between';
+          btn.querySelector('.opt-indicator').innerHTML = '●';
+          btn.querySelector('.opt-indicator').className = 'opt-indicator w-4 h-4 rounded-full border border-indigo-400 text-indigo-300 flex items-center justify-center text-[10px]';
+        } else {
+          btn.className = 'w-full text-left p-3 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-800 text-xs font-medium text-slate-200 transition flex items-center justify-between';
+          btn.querySelector('.opt-indicator').innerHTML = '';
+          btn.querySelector('.opt-indicator').className = 'opt-indicator w-4 h-4 rounded-full border border-slate-600 flex items-center justify-center text-[10px]';
+        }
+      });
+    }
+
+    // --- 8. WEB SPEECH API TTS FOR LISTENING ---
+    function playListeningTTS() {
+      const q = state.questions[2];
+      const statusLabel = document.getElementById('tts-status-label');
+      const bars = document.querySelectorAll('#waveform-bars .wave-bar');
+      bars.forEach(b => b.classList.add('animate-pulseWave'));
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(q.ttsText);
+        utter.lang = 'en-US';
+        utter.rate = state.speechRate;
+        utter.onstart = () => {
+          if (statusLabel) statusLabel.textContent = `🔊 正在朗读 (${state.speechRate}x)...`;
+        };
+        utter.onend = () => {
+          bars.forEach(b => b.classList.remove('animate-pulseWave'));
+          if (statusLabel) statusLabel.textContent = '✅ 朗读完毕 · 可再次点击重播';
+        };
+        window.speechSynthesis.speak(utter);
+      } else {
+        setTimeout(() => {
+          bars.forEach(b => b.classList.remove('animate-pulseWave'));
+        }, 1500);
+        showToastNotification('🔊 已触发系统 TTS 朗读：phenomenon', 'indigo');
+      }
+    }
+
+    function toggleSpeechRate() {
+      state.speechRate = state.speechRate === 1.0 ? 0.75 : 1.0;
+      const btn = document.getElementById('speech-rate-btn');
+      if (btn) btn.textContent = `${state.speechRate}x`;
+      playListeningTTS();
+    }
+
+    // --- 9. SUBMIT ANSWER & ANTI-GUESSING 5S COOLDOWN ---
+    function handleQuizPrimaryAction() {
+      if (state.cooldownRemaining > 0) return;
+
+      // If already submitted, move to next question
+      if (state.hasSubmittedCurrent) {
+        const nextIdx = (state.currentQuestionIndex + 1) % state.questions.length;
+        jumpToQuestionType(nextIdx);
+        return;
+      }
+
+      const q = state.questions[state.currentQuestionIndex];
+      let isCorrect = false;
+
+      if (q.type === 'choice' || q.type === 'listening') {
+        if (state.selectedOptionIndex === null) {
+          showToastNotification('⚠️ 请先选择一个选项再提交喵！', 'amber');
+          return;
+        }
+        isCorrect = q.options[state.selectedOptionIndex].isCorrect;
+      } else if (q.type === 'fill') {
+        const inputEl = document.getElementById('fill-blank-input');
+        const userVal = (inputEl ? inputEl.value : '').trim().toLowerCase();
+        if (!userVal) {
+          showToastNotification('⚠️ 请先在输入框填写答案喵！', 'amber');
+          return;
+        }
+        isCorrect = q.acceptedAnswers.some(ans => ans.toLowerCase() === userVal);
+      }
+
+      state.hasSubmittedCurrent = true;
+      state.totalAnsweredToday++;
+      document.getElementById('stat-total-answered').innerHTML = `${state.totalAnsweredToday} <span class="text-[10px] font-normal">题</span>`;
+
+      if (isCorrect) {
+        handleCorrectAnswer(q);
+      } else {
+        handleWrongAnswerWithCooldown(q);
+      }
+    }
+
+    function handleCorrectAnswer(q) {
+      state.currentStreak++;
+      renderStreakDots();
+
+      if (q.type === 'choice' || q.type === 'listening') {
+        const btn = document.getElementById(`choice-opt-${state.selectedOptionIndex}`);
+        if (btn) {
+          btn.className = 'w-full text-left p-3 rounded-xl bg-emerald-500/20 border-2 border-emerald-400 text-xs font-bold text-emerald-200 transition flex items-center justify-between';
+          btn.querySelector('.opt-indicator').innerHTML = '✓';
+        }
+      }
+
+      const expBox = document.getElementById('q-explanation-box');
+      const expTitle = document.getElementById('q-feedback-title');
+      const expText = document.getElementById('q-explanation-text');
+      expBox.classList.remove('hidden');
+      expTitle.className = 'text-xs font-bold text-emerald-400';
+      expTitle.textContent = '✅ 回答正确！连对进度 +1';
+      expText.textContent = q.explanation;
+
+      if (state.currentStreak >= state.targetStreak) {
+        setTimeout(() => {
+          simulateUnlockSuccess();
+        }, 650);
+      } else {
+        const actionBtn = document.getElementById('quiz-action-btn');
+        actionBtn.className = 'w-full py-3 rounded-xl font-bold text-xs sm:text-sm bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/25 transition flex items-center justify-center gap-2';
+        actionBtn.innerHTML = '<span>🎉 答对啦！进入下一题 ➔</span>';
+      }
+    }
+
+    function handleWrongAnswerWithCooldown(q) {
+      const card = document.getElementById('quiz-card-container');
+      card.classList.remove('animate-shake');
+      void card.offsetWidth;
+      card.classList.add('animate-shake');
+
+      // Highlight wrong & correct options
+      if (q.type === 'choice' || q.type === 'listening') {
+        q.options.forEach((opt, i) => {
+          const btn = document.getElementById(`choice-opt-${i}`);
+          if (!btn) return;
+          if (opt.isCorrect) {
+            btn.className = 'w-full text-left p-3 rounded-xl bg-emerald-500/20 border-2 border-emerald-400 text-xs font-bold text-emerald-200 transition flex items-center justify-between';
+            btn.querySelector('.opt-indicator').innerHTML = '✓';
+          } else if (i === state.selectedOptionIndex) {
+            btn.className = 'w-full text-left p-3 rounded-xl bg-rose-500/20 border-2 border-rose-500 text-xs font-bold text-rose-200 transition flex items-center justify-between';
+            btn.querySelector('.opt-indicator').innerHTML = '✕';
+          }
+        });
+      }
+
+      // Penalty logic: increment required streak if enabled
+      const penaltyChecked = document.getElementById('penalty-toggle').checked;
+      if (penaltyChecked && state.targetStreak < 6) {
+        state.targetStreak++;
+        document.getElementById('penalty-badge').classList.remove('hidden');
+        renderStreakDots();
+      }
+
+      // Add to mistake book
+      state.mistakesAddedThisSession++;
+      state.banks[3].count++;
+      renderQuestionBanks();
+      document.getElementById('mistake-book-badge').classList.remove('hidden');
+
+      // Show explanation
+      const expBox = document.getElementById('q-explanation-box');
+      const expTitle = document.getElementById('q-feedback-title');
+      const expText = document.getElementById('q-explanation-text');
+      expBox.classList.remove('hidden');
+      expTitle.className = 'text-xs font-bold text-rose-400';
+      expTitle.textContent = '❌ 回答错误 · 触发 5 秒防盲猜强制解析锁';
+      expText.textContent = q.explanation;
+
+      // Start 5-second forced reading cooldown
+      const actionBtn = document.getElementById('quiz-action-btn');
+      state.cooldownRemaining = 5;
+      actionBtn.disabled = true;
+      actionBtn.className = 'w-full py-3 rounded-xl font-bold text-xs sm:text-sm bg-slate-800 text-rose-300 border border-rose-500/30 cursor-not-allowed transition flex items-center justify-center gap-2';
+      actionBtn.innerHTML = `<span>⏳ 请认真阅读解析 (${state.cooldownRemaining}s)...</span>`;
+
+      if (state.cooldownTimerId) clearInterval(state.cooldownTimerId);
+      state.cooldownTimerId = setInterval(() => {
+        state.cooldownRemaining--;
+        if (state.cooldownRemaining <= 0) {
+          clearInterval(state.cooldownTimerId);
+          state.cooldownTimerId = null;
+          actionBtn.disabled = false;
+          actionBtn.className = 'w-full py-3 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition flex items-center justify-center gap-2';
+          actionBtn.innerHTML = '<span>我已掌握解析 · 继续下一题 ➔</span>';
+        } else {
+          actionBtn.innerHTML = `<span>⏳ 请认真阅读解析 (${state.cooldownRemaining}s)...</span>`;
+        }
+      }, 1000);
+    }
+
+    // Quick Simulation Helpers from Left Panel
+    function simulateWrongPenalty() {
+      switchMainView('intercept');
+      jumpToQuestionType(0);
+      selectChoiceOption(1); // pick wrong option B
+      handleQuizPrimaryAction();
+    }
+
+    function simulateUnlockSuccess() {
+      switchMainView('intercept');
+      document.getElementById('unlock-mistakes-count').textContent = `${state.mistakesAddedThisSession} 题`;
+      document.getElementById('unlock-success-overlay').classList.remove('hidden');
+    }
+
+    function resetQuizAndReturnToGame() {
+      document.getElementById('unlock-success-overlay').classList.add('hidden');
+      state.currentStreak = 1;
+      state.targetStreak = parseInt(document.getElementById('streak-rule-select').value, 10);
+      document.getElementById('penalty-badge').classList.add('hidden');
+      switchMainView('dashboard');
+      showToastNotification('🎮 已放行《王者荣耀》30分钟使用权限！', 'emerald');
+    }
+
+    function resetQuizOnly() {
+      document.getElementById('unlock-success-overlay').classList.add('hidden');
+      state.currentStreak = 0;
+      state.targetStreak = parseInt(document.getElementById('streak-rule-select').value, 10);
+      document.getElementById('penalty-badge').classList.add('hidden');
+      renderStreakDots();
+      jumpToQuestionType((state.currentQuestionIndex + 1) % state.questions.length);
+    }
+
+    // --- 10. MANUAL JSON IMPORT MODAL ---
+    function resetSampleJson() {
+      const sample = {
+        bank_name: "考研英语高频核心词 (自定义导入)",
+        version: "1.0",
+        questions: [
+          {
+            id: "ky_01",
+            type: "listening_choice",
+            audio_source: "tts:resilient",
+            stem: "请听发音，选择 resilient 的正确释义：",
+            options: ["有韧性的；能迅速恢复的", "脆弱的", "顺从的", "冗余的"],
+            answer: [0],
+            explanation: "resilient adj. 有弹性的；能迅速从困难中恢复的。"
+          }
+        ]
+      };
+      document.getElementById('json-import-textarea').value = JSON.stringify(sample, null, 2);
+      document.getElementById('json-validation-msg').textContent = '✨ 支持直接粘贴符合协议的 JSON 并点击下方按钮导入。';
+    }
+
+    function openImportModal() {
+      document.getElementById('import-bank-modal').classList.remove('hidden');
+    }
+
+    function closeImportModal() {
+      document.getElementById('import-bank-modal').classList.add('hidden');
+    }
+
+    function validateAndImportJsonBank() {
+      const raw = document.getElementById('json-import-textarea').value;
+      const msgEl = document.getElementById('json-validation-msg');
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed.bank_name || !Array.isArray(parsed.questions)) {
+          throw new Error('缺少 bank_name 或 questions 数组字段');
+        }
+        state.banks.unshift({
+          id: 'custom_' + Date.now(),
+          name: parsed.bank_name,
+          count: parsed.questions.length * 50,
+          progress: 10,
+          types: ['JSON导入', 'TTS听力'],
+          active: true
+        });
+        renderQuestionBanks();
+        closeImportModal();
+        switchMainView('dashboard');
+        showToastNotification(`📥 成功导入题库《${parsed.bank_name}》！`, 'emerald');
+      } catch (err) {
+        msgEl.className = 'text-[11px] text-rose-400 font-semibold';
+        msgEl.textContent = `❌ JSON 校验失败：${err.message}`;
+      }
+    }
+
+    // --- 11. EMERGENCY 10S SKIP MODAL ---
+    let skipTimerId = null;
+    function openEmergencySkipModal() {
+      if (state.skipQuota <= 0) {
+        showToastNotification('🚫 今日紧急跳过次数已用完，请老老实实答题喵！', 'rose');
+        return;
+      }
+      const modal = document.getElementById('emergency-skip-modal');
+      const btn = document.getElementById('confirm-skip-btn');
+      modal.classList.remove('hidden');
+
+      let sec = 5;
+      btn.disabled = true;
+      btn.className = 'w-full py-3 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs cursor-not-allowed transition';
+      btn.textContent = `请深呼吸冷静思考 (${sec}s)...`;
+
+      if (skipTimerId) clearInterval(skipTimerId);
+      skipTimerId = setInterval(() => {
+        sec--;
+        if (sec <= 0) {
+          clearInterval(skipTimerId);
+          btn.disabled = false;
+          btn.className = 'w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition shadow-lg';
+          btn.textContent = '确认消耗今日唯一跳过机会 (豁免10分钟)';
+        } else {
+          btn.textContent = `请深呼吸冷静思考 (${sec}s)...`;
+        }
+      }, 1000);
+    }
+
+    function closeEmergencySkipModal() {
+      if (skipTimerId) clearInterval(skipTimerId);
+      document.getElementById('emergency-skip-modal').classList.add('hidden');
+    }
+
+    function executeEmergencySkip() {
+      state.skipQuota = 0;
+      document.getElementById('skip-quota-count').textContent = '0';
+      closeEmergencySkipModal();
+      switchMainView('dashboard');
+      showToastNotification('🏳️ 已使用今日紧急跳过，获得 10 分钟临时豁免', 'amber');
+    }
+
+    // --- 12. GLOBAL TOAST HELPER ---
+    let phoneToastTimeout = null;
+    function showToastNotification(message, color = 'indigo') {
+      const toast = document.getElementById('phone-toast');
+      const txt = document.getElementById('phone-toast-text');
+      txt.textContent = message;
+      toast.classList.remove('hidden');
+      if (phoneToastTimeout) clearTimeout(phoneToastTimeout);
+      phoneToastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2800);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "bank_id":"builtin_math","bank_name":"数学灵感训练","category":"math","version":"1.0.0",
+  "description":"给思维做个舒展，发现数字的美好。",
+  "questions":[
+    {"id":"m1","type":"single_choice","difficulty":1,"stem":"一个三角形的内角和是？","payload":{"options":["180°","90°","270°","360°"]},"answer":[0],"explanation":"在欧氏平面中，三角形的三个内角之和恒为 180°。","tags":"几何,基础"},
+    {"id":"m2","type":"fill_blank","difficulty":1,"stem":"数列 2, 4, 8, 16, ______ 的下一个数是？","payload":{},"answer":["32|三十二"],"explanation":"这是公比为 2 的等比数列，下一个数是 16 × 2 = 32。","tags":"数列,基础"},
+    {"id":"m3","type":"multi_choice","difficulty":2,"stem":"下列哪些数字是质数？（多选）","payload":{"options":["2","7","9","11"]},"answer":[0,1,3],"explanation":"质数只有 1 和自身两个正因数。9 = 3 × 3，因此不是质数。","tags":"数论,基础"},
+    {"id":"m4","type":"single_choice","difficulty":1,"stem":"抛掷一枚均匀硬币，正面朝上的概率是？","payload":{"options":["1/2","1/3","1/4","1"]},"answer":[0],"explanation":"均匀硬币有两种等可能结果，正面是其中一种，因此概率为 1/2。","tags":"概率,基础"},
+    {"id":"m5","type":"fill_blank","difficulty":1,"stem":"若 3x + 6 = 21，那么 x = ______。","payload":{},"answer":["5|五"],"explanation":"两边先减去 6，得到 3x = 15；再除以 3，得到 x = 5。","tags":"代数,基础"},
+    {"id":"m6","type":"single_choice","difficulty":2,"stem":"半径为 3 的圆，面积为多少？","payload":{"options":["9π","6π","3π","18π"]},"answer":[0],"explanation":"圆面积公式 S = πr²，代入 r = 3，得到 S = 9π。","tags":"几何,基础"},
+    {"id":"m7","type":"single_choice","difficulty":1,"stem":"一件商品原价 200 元，打八折后的价格是？","payload":{"options":["160 元","180 元","80 元","120 元"]},"answer":[0],"explanation":"八折即原价的 80%，200 × 0.8 = 160 元。","tags":"应用,基础"},
+    {"id":"m8","type":"fill_blank","difficulty":2,"stem":"直角三角形的两条直角边为 3 和 4，斜边长为 ______。","payload":{},"answer":["5|五"],"explanation":"根据勾股定理，斜边长为 √(3² + 4²) = √25 = 5。","tags":"几何,勾股定理"}
+  ]
+}

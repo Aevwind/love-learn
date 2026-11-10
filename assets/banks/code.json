@@ -1,0 +1,14 @@
+{
+  "bank_id":"builtin_code","bank_name":"编程思维小练习","category":"code","version":"1.0.0",
+  "description":"每天一点灵感，让逻辑也轻盈起来。",
+  "questions":[
+    {"id":"c1","type":"single_choice","difficulty":1,"stem":"在 Dart 中，哪个关键字用于声明只能赋值一次的变量？","payload":{"options":["final","var","dynamic","late"]},"answer":[0],"explanation":"final 变量只能赋值一次；const 额外要求在编译期确定值。late 本身不代表不可重新赋值。","tags":"Dart,基础"},
+    {"id":"c2","type":"single_choice","difficulty":2,"stem":"二分查找在有序数组中的时间复杂度是？","payload":{"options":["O(log n)","O(n)","O(n²)","O(1)"]},"answer":[0],"explanation":"每次将搜索范围缩小一半，因此最多约需 log₂n 次比较。","tags":"算法,基础"},
+    {"id":"c3","type":"multi_choice","difficulty":2,"stem":"以下哪些是 Dart 的集合类型？（多选）","payload":{"options":["List","Set","Map","Future"]},"answer":[0,1,2],"explanation":"List、Set、Map 是集合类型。Future 表示将来可用的异步计算结果。","tags":"Dart,集合"},
+    {"id":"c4","type":"fill_blank","difficulty":1,"stem":"Dart 中，等待异步 Future 结果的关键字是 ______。","payload":{},"answer":["await"],"explanation":"await 用于等待 Future 完成，通常出现在标记为 async 的函数中。","tags":"Dart,异步"},
+    {"id":"c5","type":"single_choice","difficulty":2,"stem":"队列（Queue）通常遵循哪一种规则？","payload":{"options":["先进先出","后进先出","随机存取","优先最后插入"]},"answer":[0],"explanation":"队列遵循 FIFO（First In, First Out），栈通常遵循 LIFO（后进先出）。","tags":"数据结构,基础"},
+    {"id":"c6","type":"single_choice","difficulty":2,"stem":"SQL 中用于筛选查询结果行的子句是？","payload":{"options":["WHERE","ORDER BY","SELECT","LIMIT"]},"answer":[0],"explanation":"WHERE 指定行筛选条件；ORDER BY 排序；SELECT 选择列；LIMIT 限制数量。","tags":"SQL,基础"},
+    {"id":"c7","type":"single_choice","difficulty":2,"stem":"Flutter 中，哪个组件可确保内容避开刘海和系统状态栏？","payload":{"options":["SafeArea","Center","Expanded","Stack"]},"answer":[0],"explanation":"SafeArea 使用 MediaQuery 的系统边距，避免内容被系统界面或屏幕切口遮挡。","tags":"Flutter,布局"},
+    {"id":"c8","type":"fill_blank","difficulty":1,"stem":"布尔逻辑中，true && false 的结果是 ______。","payload":{},"answer":["false|假"],"explanation":"逻辑与（&&）要求两侧都为 true，结果才是 true。","tags":"逻辑,基础"}
+  ]
+}

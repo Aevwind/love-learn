@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">爱学习</string>
+    <string name="accessibility_description">在你主动开启守护后识别受控应用切换，累计使用时间并显示学习提醒。不读取屏幕文字，不采集输入内容。可随时在系统设置中关闭。</string>
+</resources>

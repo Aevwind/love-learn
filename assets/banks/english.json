@@ -1,0 +1,18 @@
+{
+  "bank_id":"builtin_english","bank_name":"CET-6 核心词汇","category":"english","version":"1.0.0",
+  "description":"从一个单词开始，遇见更大的世界。",
+  "questions":[
+    {"id":"e1","type":"single_choice","difficulty":2,"stem":"「serendipity」最接近下列哪一个含义？","payload":{"options":["不期而遇的美好","持之以恒的努力","无可替代的珍贵","转瞬即逝的时光"]},"answer":[0],"explanation":"serendipity 指偶然发现有价值或美好事物的幸运，也就是「意外之喜」。","tags":"高频,名词"},
+    {"id":"e2","type":"listening","difficulty":3,"stem":"听一听这个单词，选择它的中文含义。","audio_source":"tts:ephemeral","payload":{"options":["短暂的；转瞬即逝的","永恒的；不朽的","复杂的；难懂的","盛行的；普遍的"]},"answer":[0],"explanation":"ephemeral /ɪˈfemərəl/：短暂的。An ephemeral moment of joy，一瞬间的喜悦。","tags":"高频,形容词"},
+    {"id":"e3","type":"fill_blank","difficulty":2,"stem":"We attribute our success ______ hard work.","payload":{"case_sensitive":false,"placeholder":"输入合适的介词"},"answer":["to|归因于"],"explanation":"attribute A to B 是固定搭配，意为「把 A 归因于 B」。","tags":"固定搭配,介词"},
+    {"id":"e4","type":"single_choice","difficulty":2,"stem":"「resilient」描述了怎样的一种品质？","payload":{"options":["坚韧、有复原力的","犹豫不决的","漠不关心的","难以理解的"]},"answer":[0],"explanation":"resilient 指遭遇困难后能够恢复、重新振作的。Keep growing, stay resilient. 一直成长，保持坚韧。","tags":"高频,形容词"},
+    {"id":"e5","type":"multi_choice","difficulty":3,"stem":"下列哪些词可以表示「专注」？（多选）","payload":{"options":["focus","concentrate","distract","attend"]},"answer":[0,1],"explanation":"focus 与 concentrate 均表示集中注意力。distract 表示分散注意力；attend 的通常含义是出席、参加。","tags":"高频,动词"},
+    {"id":"e6","type":"fill_blank","difficulty":1,"stem":"Small steps make a big ______.（小小的行动带来巨大的改变。）","payload":{"placeholder":"输入「改变；差异」对应的英文"},"answer":["difference"],"explanation":"make a difference 意为「产生影响；带来改变」。","tags":"固定搭配,名词"},
+    {"id":"e7","type":"single_choice","difficulty":3,"stem":"「meticulous」的正确含义是什么？","payload":{"options":["一丝不苟的；细致的","慷慨大方的","令人愉快的","显而易见的"]},"answer":[0],"explanation":"meticulous /məˈtɪkjələs/：注重细节、一丝不苟的。a meticulous plan，周密的计划。","tags":"高频,形容词"},
+    {"id":"e8","type":"listening","difficulty":2,"stem":"播放单词发音，选出正确的中文释义。","audio_source":"tts:blossom","payload":{"options":["开花；成长","下降；衰落","借入；借用","隐藏；躲避"]},"answer":[0],"explanation":"blossom 既可以指花朵，也可以作动词，表示开花或蓬勃发展。","tags":"高频,动词"},
+    {"id":"e9","type":"single_choice","difficulty":2,"stem":"Which word means「好奇心」？","payload":{"options":["curiosity","generosity","diversity","capacity"]},"answer":[0],"explanation":"curiosity：好奇心；generosity：慷慨；diversity：多样性；capacity：容量、能力。","tags":"高频,名词"},
+    {"id":"e10","type":"fill_blank","difficulty":1,"stem":"Practice makes ______.（熟能生巧。）","payload":{},"answer":["perfect"],"explanation":"Practice makes perfect. 是常用谚语，强调持续练习的价值。","tags":"固定搭配"},
+    {"id":"e11","type":"single_choice","difficulty":2,"stem":"「tranquil」最接近哪个意思？","payload":{"options":["宁静的","拥挤的","昂贵的","严厉的"]},"answer":[0],"explanation":"tranquil：平静的、宁静的。a tranquil garden，一座宁静的花园。","tags":"形容词"},
+    {"id":"e12","type":"multi_choice","difficulty":2,"stem":"选择所有与「成长」有关的词。（多选）","payload":{"options":["grow","flourish","wither","develop"]},"answer":[0,1,3],"explanation":"grow、flourish、develop 都可表示成长、发展；wither 表示枯萎。","tags":"动词"}
+  ]
+}

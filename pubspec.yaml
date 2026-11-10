@@ -1,0 +1,39 @@
+name: studylock
+description: 爱学习 (love learn) · 把时间留给更好的自己
+publish_to: none
+version: 1.0.2+3
+environment:
+  sdk: '>=3.13.0 <4.0.0'
+  flutter: '>=3.47.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_riverpod: ^3.5.0
+  drift: ^2.35.4
+  drift_flutter: ^0.3.1
+  flutter_secure_storage: ^11.2.0
+  cryptography: ^2.9.0
+  file_picker: ^13.3.2
+  archive: ^4.6.0
+  csv: ^8.0.0
+  flutter_tts: ^4.2.5
+  just_audio: ^0.10.6
+  just_audio_windows: ^0.2.3
+  cupertino_icons: ^1.0.8
+  path_provider: ^2.1.5
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  pigeon: ^29.2.0
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/banks/
+    - assets/fonts/OFL.txt
+  fonts:
+    - family: NotoSansSC
+      fonts:
+        - asset: assets/fonts/NotoSansSC.ttf
